@@ -1,0 +1,81 @@
+---
+title: Writing usage examples for your Haskell package
+author: Aditya Manthramurthy
+tags: haskell, cabal, minio
+---
+
+As a user of a Haskell library, I often want to refer to working examples, both
+to find my way around a library and to get started quickly.
+
+As a library author, it is possible to include examples in the API documentation
+that can be viewed in the Haddocks. Haddock even [[https://www.haskell.org/haddock/doc/html/ch03s08.html#idm140354810775744][has]] specific markup for REPL
+session examples. However, a significant problem with this is that the example
+may not remain current over time, and typos and other errors can easily creep
+in - leading to a poor experience for the user who actually tries to use the
+example. 
+
+Additionally, this approach is not convenient for providing /complete/ examples
+of API usage - it is not practical to include a complete single file program as
+an example in the Haddocks.
+
+For this reason, complete example programs can be provided in a dedicated
+~examples~ directory in the package. This [[https://github.com/minio/minio-hs/tree/master/examples][approach]] was taken in the [[https://github.com/minio/minio-hs/tree/master/examples][MinIO
+Haskell client library]]. To ensure that the examples stay current as the library
+changes, the examples are included in the package's ~.cabal~ file and built on
+the CI system with every change.
+
+** Adding example executables to your ~.cabal~ file
+
+We define a flag in our project's ~.cabal~ file, that will be turned on whenever
+a user wants to compile the examples:
+
+#+begin_src
+Flag examples
+  Description: Build the examples
+  Default: False
+  Manual: True
+#+end_src
+
+This means that the flag is not enabled by default.
+
+Now, to build the examples with ~stack~ or ~cabal~ a user would run:
+
+#+begin_src shell
+# stack
+$ stack build --flag minio-hs:examples
+
+# OR cabal
+$ cabal new-build --enable-tests -fexamples
+#+end_src
+
+Next, we will define a [[https://cabal.readthedocs.io/en/latest/developing-packages.html#common-stanzas][~common~ configuration stanza]] to factor out some build
+settings common to all our examples - this will then be imported in each
+example executable's configuration section. For example:
+
+#+begin_src
+common example-settings
+  ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
+  build-depends:       base >= 4.7 && < 5
+                     , bytestring
+                     , conduit
+                     , minio-hs
+  hs-source-dirs:      examples
+  if !flag(examples)
+    buildable: False
+#+end_src
+
+Note that the example flag is used here (on the last two lines) to turn off
+compilation if the ~examples~ flag is off.
+
+Finally, we add an executable section for each example program as follows:
+
+#+begin_src
+executable BucketExists
+  import:              example-settings
+  main-is:             BucketExists.hs
+#+end_src
+
+It is now easy to add new examples to the package - each example just needs to
+import the common settings and define the ~main-is~ is property.
