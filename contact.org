@@ -1,6 +1,0 @@
----
-title: Contact
----
-
-- On Github I am donatello
-- On Twitter I am imdonatello

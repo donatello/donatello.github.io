@@ -1,8 +1,0 @@
----
-title: About
----
-
-I'm Aditya Manthramurthy. I am a software engineer in the Bay Area. This is my
-personal website, where I occasionally write about whatever interests me.
-
-The source is available on Github.
