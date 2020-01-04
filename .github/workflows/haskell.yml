@@ -1,0 +1,51 @@
+name: Haskell CI
+
+on:
+  push:
+    branches: 
+      - dev
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Cache cabal modules
+      uses: actions/cache@v1
+      with:
+        path: ~/.cabal
+        key: cabal-data        
+    - uses: actions/setup-haskell@v1
+      with:
+        ghc-version: '8.6.5'
+        cabal-version: '3.0'
+    - name: Install dependencies
+      run: |
+        cabal new-update
+        cabal new-build --only-dependencies
+    - name: Build
+      run: |
+        cabal new-configure --enable-tests
+        cabal new-build
+        cabal new-exec site clean
+        cabal new-exec site build
+    - name: Update master
+      env:
+        BLOG_DEPLOY_PVT_KEY: ${{ secrets.BLOG_DEPLOY_PVT_KEY }}
+      run: |
+        git remote -v || echo "No git!"
+        mkdir -p ~/.ssh/
+        echo $BLOG_DEPLOY_PVT_KEY | base64 -d > ~/.ssh/id_ed25519
+        chmod 400 ~/.ssh/id_ed25519
+        git remote rm origin
+        git remote add origin git@github.com:donatello/donatello.github.io.git
+        git remote update
+        git config --global user.email "action-bot@github.com"
+        git config --global user.name "Github Automated Build"
+        git checkout -b master --track origin/master
+        cp -a _site/. .
+        git add -A
+        git commit -m 'Automated publish'
+        git push origin master:master
