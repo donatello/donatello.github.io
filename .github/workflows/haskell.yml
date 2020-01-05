@@ -35,7 +35,6 @@ jobs:
       env:
         BLOG_DEPLOY_PVT_KEY: ${{ secrets.BLOG_DEPLOY_PVT_KEY }}
       run: |
-        git remote -v || echo "No git!"
         mkdir -p ~/.ssh/
         echo $BLOG_DEPLOY_PVT_KEY | base64 -d > ~/.ssh/id_ed25519
         chmod 400 ~/.ssh/id_ed25519
@@ -48,4 +47,5 @@ jobs:
         cp -a _site/. .
         git add -A
         git commit -m 'Automated publish'
+        git show
         git push origin master:master
