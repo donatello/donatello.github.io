@@ -3,7 +3,9 @@ html {
 }
 
 body {
-  font-size: 1.6rem;
+  font-family: "Computer Modern Serif", serif;
+  font-size: 1.8rem;
+  text-align: justify;
   color: #000;
 }
 
